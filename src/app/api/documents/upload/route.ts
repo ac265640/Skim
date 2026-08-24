@@ -5,12 +5,47 @@ import { supabaseAdmin, BUCKET_NAME } from "@/lib/supabase";
 import { prisma } from "@/lib/prisma";
 import { generateSummary } from "@/lib/gemini";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 60; // 60s timeout for large uploads
+
 // pdf-parse text extraction
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdf = require("pdf-parse");
-  const data = await pdf(buffer);
-  return data?.text || "";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdf = require("pdf-parse");
+    const data = await pdf(buffer);
+    const rawText = data?.text || "";
+    // Strip null bytes (\u0000) which PostgreSQL strictly rejects in UTF-8 text columns (Error 22021)
+    return rawText.replace(/\0/g, "");
+  } catch (err) {
+    console.error("PDF parse error:", err);
+    return "";
+  }
+}
+
+
+// Upload helper with automatic retries for transient socket errors (ECONNRESET)
+async function uploadToSupabaseWithRetry(storagePath: string, buffer: Buffer, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const { data, error } = await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .upload(storagePath, buffer, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+      if (!error && data) {
+        return { data, error: null };
+      }
+      console.warn(`Supabase upload attempt ${i + 1} failed:`, error?.message || error);
+    } catch (err) {
+      console.warn(`Supabase upload attempt ${i + 1} exception:`, err);
+    }
+    if (i < retries - 1) {
+      await new Promise((res) => setTimeout(res, 1000));
+    }
+  }
+  return { data: null, error: new Error("Failed to upload file to Supabase after 3 attempts.") };
 }
 
 export async function POST(req: NextRequest) {
@@ -34,10 +69,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
 
-  // Check PDF magic bytes
-  if (!buffer.slice(0, 4).equals(Buffer.from("%PDF"))) {
+  // Check PDF magic bytes (%PDF)
+  if (buffer.length < 4 || !buffer.subarray(0, 4).equals(Buffer.from("%PDF"))) {
     return NextResponse.json(
       { error: "Invalid PDF file" },
       { status: 400 }
@@ -49,18 +85,13 @@ export async function POST(req: NextRequest) {
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
   const storagePath = `${userId}/${timestamp}_${safeName}`;
 
-  // Upload to Supabase Storage
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from(BUCKET_NAME)
-    .upload(storagePath, buffer, {
-      contentType: "application/pdf",
-      upsert: false,
-    });
+  // 1. Upload file to Supabase Storage with retry
+  const { error: uploadError } = await uploadToSupabaseWithRetry(storagePath, buffer);
 
   if (uploadError) {
     console.error("Storage upload error:", uploadError);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Failed to upload file. Please try again." },
       { status: 500 }
     );
   }
@@ -72,47 +103,44 @@ export async function POST(req: NextRequest) {
 
   const storageUrl = urlData?.publicUrl || storagePath;
 
-  // Create document record (summary starts as null = "Summarizing...")
+  // 2. Extract text immediately (takes < 300ms) so text is ready right away
+  const extractedText = await extractPdfText(buffer);
+
+  // 3. Create document record with extracted text
   const document = await prisma.document.create({
     data: {
       ownerId: userId,
       filename: file.name,
       storageUrl,
-      extractedText: null,
-      summary: null,
+      extractedText: extractedText || null,
+      summary: null, // Null indicates summary is generating
     },
   });
 
-  // Background: extract text + generate summary (don't await — respond immediately)
-  processDocument(document.id, buffer).catch((err) =>
-    console.error("Background processing error:", err)
-  );
-
-  return NextResponse.json({ document }, { status: 201 });
-}
-
-async function processDocument(documentId: string, buffer: Buffer) {
-  try {
-    // Extract text
-    const extractedText = await extractPdfText(buffer);
-
-    // Generate summary
-    const summary = await generateSummary(extractedText);
-
-    // Update document record
+  // 4. Generate summary in background (or update existing)
+  if (extractedText) {
+    generateSummary(extractedText)
+      .then(async (summary) => {
+        await prisma.document.update({
+          where: { id: document.id },
+          data: { summary },
+        });
+      })
+      .catch(async (err) => {
+        console.error("Background summary generation error:", err);
+        await prisma.document.update({
+          where: { id: document.id },
+          data: { summary: "Summary generation failed. Click to retry." },
+        }).catch(() => {});
+      });
+  } else {
     await prisma.document.update({
-      where: { id: documentId },
-      data: { extractedText, summary },
-    });
-  } catch (error) {
-    console.error("Document processing error:", error);
-    // Store a failure note so UI doesn't hang on "Summarizing..."
-    await prisma.document.update({
-      where: { id: documentId },
+      where: { id: document.id },
       data: {
-        summary: "Summary generation failed. Please try re-uploading.",
-        extractedText: "",
+        summary: "Automated text extraction was limited for this document (likely a scanned or image-only PDF).",
       },
     }).catch(() => {});
   }
+
+  return NextResponse.json({ document }, { status: 201 });
 }

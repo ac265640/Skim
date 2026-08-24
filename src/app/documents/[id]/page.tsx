@@ -11,8 +11,9 @@ import ChatPanel from "@/components/ChatPanel";
 const PDFViewer = dynamic(() => import("@/components/PDFViewer"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+    <div className="flex items-center justify-center h-full" style={{ background: "var(--cream)" }}>
+      <div className="w-8 h-8 border-[3px] rounded-full animate-spin"
+        style={{ borderColor: "var(--cream-darker)", borderTopColor: "var(--orange)" }} />
     </div>
   ),
 });
@@ -87,16 +88,17 @@ export default function DocumentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--cream)" }}>
+        <div className="w-8 h-8 border-[3px] rounded-full animate-spin"
+          style={{ borderColor: "var(--cream-darker)", borderTopColor: "var(--orange)" }} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4">
-        <p className="text-red-400 text-lg font-medium">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "var(--cream)" }}>
+        <p className="text-lg font-bold" style={{ color: "#b53b1a" }}>{error}</p>
         <Link href="/dashboard" className="btn-secondary text-sm">← Back to dashboard</Link>
       </div>
     );
@@ -105,19 +107,21 @@ export default function DocumentPage() {
   if (!document) return null;
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--cream)" }}>
       {/* Navbar */}
-      <nav className="glass border-b border-gray-800/60 z-50 flex-shrink-0">
+      <nav className="z-50 flex-shrink-0 sticky top-0"
+        style={{ background: "rgba(253,244,231,0.95)", backdropFilter: "blur(12px)", borderBottom: "2px solid var(--cream-darker)" }}>
         <div className="h-14 px-4 flex items-center gap-3">
-          <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors flex-shrink-0">
+          <Link href="/dashboard" className="transition-colors flex-shrink-0 p-1.5 rounded-lg hover:bg-white"
+            style={{ color: "var(--ink-muted)" }}>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
 
           <div className="min-w-0 flex-1">
-            <h1 className="font-semibold text-white text-sm truncate">{document.filename}</h1>
-            <p className="text-xs text-gray-500 truncate">
+            <h1 className="font-bold text-sm truncate" style={{ color: "var(--ink)" }}>{document.filename}</h1>
+            <p className="text-xs truncate" style={{ color: "var(--ink-muted)" }}>
               {document.ownerName} ·{" "}
               {new Date(document.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </p>
@@ -145,7 +149,7 @@ export default function DocumentPage() {
                 className="btn-primary text-xs py-1.5 px-3"
               >
                 {sharing ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 ) : (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -161,47 +165,76 @@ export default function DocumentPage() {
 
       {/* Share link banner */}
       {shareUrl && (
-        <div className="bg-violet-950/60 border-b border-violet-800/40 px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-violet-300 flex-shrink-0">Share link:</span>
-          <code className="flex-1 text-xs bg-gray-900 px-2 py-1 rounded text-gray-300 truncate min-w-0">
+        <div className="px-4 py-2.5 flex items-center gap-3 flex-shrink-0"
+          style={{ background: "#FEF0E0", borderBottom: "2px solid var(--orange-light)" }}>
+          <span className="text-xs font-semibold flex-shrink-0" style={{ color: "var(--orange-dark)" }}>Share link:</span>
+          <code className="flex-1 text-xs px-2 py-1 rounded-lg truncate min-w-0"
+            style={{ background: "#fff", border: "1.5px solid var(--cream-darker)", color: "var(--ink)" }}>
             {shareUrl}
           </code>
-          <button onClick={copyShareUrl} className="btn-secondary text-xs py-1 px-3 flex-shrink-0">
+          <button onClick={copyShareUrl} className="btn-primary text-xs py-1 px-3 flex-shrink-0">
             {copied ? "✓ Copied" : "Copy"}
+          </button>
+          <button
+            onClick={() => setShareUrl("")}
+            title="Dismiss"
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md transition-colors"
+            style={{ color: "var(--orange-dark)", background: "transparent" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.08)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       )}
 
       {/* Summary banner */}
-      {showSummary && document.summary && (
-        <div className="bg-gray-900/80 border-b border-gray-800 px-4 py-3 flex-shrink-0">
+      {showSummary && (
+        <div className="px-4 py-3 flex-shrink-0"
+          style={{ background: "#fff", borderBottom: "2px solid var(--cream-darker)" }}>
           <div className="max-w-4xl mx-auto">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded bg-violet-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: "var(--orange)", border: "2px solid var(--orange-dark)" }}>
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed">{document.summary}</p>
+              {document.summary ? (
+                <p className="text-sm leading-relaxed" style={{ color: "var(--ink)" }}>{document.summary}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full pulse-dot" style={{ background: "var(--orange)" }} />
+                  <p className="text-sm" style={{ color: "var(--ink-muted)" }}>AI summary is still being generated…</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* Mobile tab switcher */}
-      <div className="flex sm:hidden border-b border-gray-800 flex-shrink-0">
+      <div className="flex sm:hidden flex-shrink-0"
+        style={{ borderBottom: "2px solid var(--cream-darker)", background: "#fff" }}>
         <button
           onClick={() => setMobileTab("pdf")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors
-            ${mobileTab === "pdf" ? "text-white border-b-2 border-violet-500" : "text-gray-500"}`}
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors`}
+          style={{
+            color: mobileTab === "pdf" ? "var(--orange)" : "var(--ink-muted)",
+            borderBottom: mobileTab === "pdf" ? "2px solid var(--orange)" : "2px solid transparent",
+          }}
         >
           PDF
         </button>
         <button
           onClick={() => setMobileTab("sidebar")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors
-            ${mobileTab === "sidebar" ? "text-white border-b-2 border-violet-500" : "text-gray-500"}`}
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors`}
+          style={{
+            color: mobileTab === "sidebar" ? "var(--orange)" : "var(--ink-muted)",
+            borderBottom: mobileTab === "sidebar" ? "2px solid var(--orange)" : "2px solid transparent",
+          }}
         >
           Chat & Comments
         </button>
@@ -210,24 +243,27 @@ export default function DocumentPage() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* PDF area */}
-        <div className={`flex-1 overflow-hidden ${mobileTab === "sidebar" ? "hidden sm:flex" : "flex"} flex-col`}>
+        <div className={`flex-1 overflow-hidden ${mobileTab === "sidebar" ? "hidden sm:flex" : "flex"} flex-col`}
+          style={{ background: "var(--cream-dark)" }}>
           <PDFViewer url={document.storageUrl} />
         </div>
 
         {/* Right sidebar */}
-        <div className={`w-full sm:w-80 lg:w-96 flex flex-col border-l border-gray-800 flex-shrink-0
-          ${mobileTab === "pdf" ? "hidden sm:flex" : "flex"}`}>
+        <div className={`w-full sm:w-80 lg:w-96 flex flex-col flex-shrink-0
+          ${mobileTab === "pdf" ? "hidden sm:flex" : "flex"}`}
+          style={{ borderLeft: "2px solid var(--cream-darker)", background: "#fff" }}>
           {/* Tabs */}
-          <div className="flex border-b border-gray-800 flex-shrink-0">
+          <div className="flex flex-shrink-0" style={{ borderBottom: "2px solid var(--cream-darker)" }}>
             {(["chat", "comments"] as SidebarTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 text-sm font-medium capitalize transition-colors
-                  ${activeTab === tab
-                    ? "text-white border-b-2 border-violet-500"
-                    : "text-gray-500 hover:text-gray-300"
-                  }`}
+                className="flex-1 py-3 text-sm font-semibold capitalize transition-colors"
+                style={{
+                  color: activeTab === tab ? "var(--orange)" : "var(--ink-muted)",
+                  borderBottom: activeTab === tab ? "2.5px solid var(--orange)" : "2.5px solid transparent",
+                  background: "transparent",
+                }}
               >
                 {tab === "chat" ? "💬 AI Chat" : "🗨 Comments"}
               </button>

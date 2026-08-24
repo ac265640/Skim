@@ -40,7 +40,6 @@ export default function DashboardPage() {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  // Poll for summary updates every 5s if any doc is still summarizing
   useEffect(() => {
     const needsPolling = documents.some((d) => d.summary === null);
     if (!needsPolling) return;
@@ -77,7 +76,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Add optimistically
       setDocuments((prev) => [data.document, ...prev]);
     } catch {
       setUploadError("Upload failed. Please try again.");
@@ -113,22 +111,24 @@ export default function DashboardPage() {
     });
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen" style={{ background: "var(--cream)" }}>
       {/* Navbar */}
-      <nav className="glass border-b border-gray-800/60 sticky top-0 z-50">
+      <nav className="sticky top-0 z-50 border-b"
+        style={{ background: "rgba(253,244,231,0.93)", backdropFilter: "blur(12px)", borderColor: "var(--cream-darker)" }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-violet-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "#1C1409", border: "2px solid #2E1F0A" }}>
+              <svg className="w-4 h-4" style={{ color: "#E8823A" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="font-bold text-white">Skim</span>
+            <span className="font-bold text-lg" style={{ fontFamily: "'Instrument Serif', serif", color: "var(--ink)" }}>Skim</span>
           </Link>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400 hidden sm:block">
+            <span className="text-sm hidden sm:block" style={{ color: "var(--ink-muted)" }}>
               {session?.user?.name}
             </span>
             <button
@@ -145,15 +145,18 @@ export default function DashboardPage() {
         {/* Header row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">My Documents</h1>
-            <p className="text-gray-400 text-sm mt-0.5">
+            <h1 className="text-3xl font-bold" style={{ fontFamily: "'Instrument Serif', serif", color: "var(--ink)" }}>
+              My Documents
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: "var(--ink-muted)" }}>
               {documents.length} document{documents.length !== 1 ? "s" : ""}
             </p>
           </div>
 
           {/* Search */}
           <div className="relative sm:w-72">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+              style={{ color: "var(--ink-muted)" }}
               fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -171,11 +174,12 @@ export default function DashboardPage() {
 
         {/* Upload zone */}
         <div
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center mb-8 transition-all duration-200 cursor-pointer
-            ${dragOver
-              ? "border-violet-500 bg-violet-950/30"
-              : "border-gray-700 hover:border-gray-600 hover:bg-gray-900/50"
-            }`}
+          className={`relative border-2 border-dashed rounded-2xl p-8 text-center mb-8 transition-all duration-200 cursor-pointer`}
+          style={{
+            borderColor: dragOver ? "var(--orange)" : "var(--cream-darker)",
+            background: dragOver ? "rgba(232,130,58,0.06)" : "#fff",
+            boxShadow: dragOver ? "4px 4px 0 var(--orange-light)" : "4px 4px 0 var(--cream-darker)",
+          }}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
@@ -191,90 +195,101 @@ export default function DashboardPage() {
 
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-              <p className="text-gray-400">Uploading and processing…</p>
+              <div className="w-8 h-8 border-[3px] rounded-full animate-spin"
+                style={{ borderColor: "var(--cream-darker)", borderTopColor: "var(--orange)" }} />
+              <p style={{ color: "var(--ink-muted)" }}>Uploading and processing…</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-1">
-                <svg className="w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
+                style={{ background: "#FEF0E0", border: "2px solid var(--cream-darker)" }}>
+                <svg className="w-7 h-7" style={{ color: "var(--orange)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <p className="text-gray-200 font-medium">Drop a PDF here, or click to browse</p>
-              <p className="text-gray-500 text-sm">PDF files only</p>
+              <p className="font-semibold" style={{ color: "var(--ink)" }}>Drop a PDF here, or click to browse</p>
+              <p className="text-sm" style={{ color: "var(--ink-muted)" }}>PDF files only</p>
             </div>
           )}
         </div>
 
         {uploadError && (
-          <div className="mb-6 p-3 bg-red-900/40 border border-red-700/50 rounded-lg text-red-300 text-sm">
+          <div className="mb-6 p-3 rounded-xl text-sm font-medium"
+            style={{ background: "#fff0ea", border: "2px solid #f4b89a", color: "#b53b1a", boxShadow: "3px 3px 0 #f4b89a" }}>
             {uploadError}
           </div>
         )}
 
         {/* Documents grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="card h-48 shimmer" />
+              <div key={i} className="shimmer rounded-2xl h-52"
+                style={{ border: "2.5px solid var(--cream-darker)" }} />
             ))}
           </div>
         ) : documents.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
-            <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-lg font-medium text-gray-400">
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+              style={{ background: "#fff", border: "2.5px solid var(--cream-darker)", boxShadow: "4px 4px 0 var(--cream-darker)" }}>
+              <svg className="w-8 h-8" style={{ color: "var(--cream-darker)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-lg font-bold" style={{ color: "var(--ink)", fontFamily: "'Instrument Serif', serif" }}>
               {search ? "No documents match your search" : "No documents yet"}
             </p>
-            <p className="text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: "var(--ink-muted)" }}>
               {search ? "Try a different search term" : "Upload your first PDF to get started"}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {documents.map((doc) => (
-              <div key={doc.id} className="card group hover:border-gray-700 transition-all duration-200 flex flex-col">
+              <div key={doc.id}
+                className="group flex flex-col rounded-2xl p-5 transition-all duration-150 bg-white"
+                style={{ border: "2.5px solid var(--cream-darker)", boxShadow: "5px 5px 0px var(--cream-darker)" }}>
                 {/* File icon + name */}
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-violet-900/40 border border-violet-700/40 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: "#FEF0E0", border: "2px solid var(--cream-darker)" }}>
+                    <svg className="w-5 h-5" style={{ color: "var(--orange)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-white text-sm leading-tight break-words line-clamp-2">
+                    <p className="font-semibold text-sm leading-tight break-words line-clamp-2" style={{ color: "var(--ink)" }}>
                       {doc.filename}
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">{formatDate(doc.createdAt)}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--ink-muted)" }}>{formatDate(doc.createdAt)}</p>
                   </div>
                 </div>
 
                 {/* Summary */}
                 <div className="flex-1 mb-4">
                   {doc.summary === null ? (
-                    <div className="flex items-center gap-2 text-xs text-amber-400">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-dot" />
+                    <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--orange)" }}>
+                      <div className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: "var(--orange)" }} />
                       Generating AI summary…
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-4">
+                    <p className="text-xs leading-relaxed line-clamp-4" style={{ color: "var(--ink-muted)" }}>
                       {doc.summary}
                     </p>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-800">
+                <div className="flex items-center gap-2 pt-3"
+                  style={{ borderTop: "2px solid var(--cream-dark)" }}>
                   <button
                     onClick={() => router.push(`/documents/${doc.id}`)}
                     className="btn-primary text-xs py-1.5 px-3 flex-1"
                   >
-                    Open
+                    Open →
                   </button>
                   <button
                     onClick={() => handleDelete(doc.id)}

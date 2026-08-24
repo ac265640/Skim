@@ -20,6 +20,15 @@ const nextConfig = {
       },
     ],
   },
+  // Allow large PDF uploads (keep connection alive)
+  async headers() {
+    return [
+      {
+        source: "/api/documents/upload",
+        headers: [{ key: "Connection", value: "keep-alive" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

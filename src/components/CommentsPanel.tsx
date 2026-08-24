@@ -91,20 +91,23 @@ export default function CommentsPanel({
     });
 
   const CommentItem = ({ comment, depth = 0 }: { comment: Comment; depth?: number }) => (
-    <div className={`${depth > 0 ? "ml-6 border-l border-gray-800 pl-4" : ""}`}>
+    <div className={`${depth > 0 ? "ml-6 pl-4" : ""}`}
+      style={depth > 0 ? { borderLeft: "2.5px solid var(--cream-darker)" } : {}}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-1.5">
-          <div className="w-6 h-6 rounded-full bg-violet-900 flex items-center justify-center text-xs font-bold text-violet-300">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold"
+            style={{ background: "var(--orange)", color: "#fff", border: "2px solid var(--orange-dark)" }}>
             {comment.authorName[0]?.toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-gray-200">{comment.authorName}</span>
-          <span className="text-xs text-gray-600">{formatTime(comment.createdAt)}</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{comment.authorName}</span>
+          <span className="text-xs" style={{ color: "var(--ink-muted)" }}>{formatTime(comment.createdAt)}</span>
         </div>
-        <p className="text-sm text-gray-300 leading-relaxed">{comment.body}</p>
+        <p className="text-sm leading-relaxed" style={{ color: "var(--ink)" }}>{comment.body}</p>
         {depth === 0 && (
           <button
             onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-            className="text-xs text-gray-600 hover:text-violet-400 mt-1.5 transition-colors"
+            className="text-xs mt-1.5 font-semibold transition-colors"
+            style={{ color: "var(--orange)" }}
           >
             Reply
           </button>
@@ -153,27 +156,36 @@ export default function CommentsPanel({
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-4 py-3 divide-y divide-gray-800/60">
+    <div className="flex flex-col h-full" style={{ background: "#fff" }}>
+      <div className="flex-1 overflow-y-auto px-4 py-3"
+        style={{ borderBottom: "none", gap: 0 }}>
         {loading ? (
           <div className="space-y-3 pt-2">
-            {[1, 2].map((i) => <div key={i} className="h-16 shimmer rounded-lg" />)}
+            {[1, 2].map((i) => <div key={i} className="h-16 shimmer rounded-xl"
+              style={{ border: "1.5px solid var(--cream-darker)" }} />)}
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-10 text-gray-600">
-            <svg className="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="text-center py-10">
+            <svg className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--cream-darker)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm">No comments yet. Be the first!</p>
+            <p className="text-sm" style={{ color: "var(--ink-muted)" }}>No comments yet. Be the first!</p>
           </div>
         ) : (
-          comments.map((c) => <CommentItem key={c.id} comment={c} />)
+          <div style={{ borderTop: "none" }}>
+            {comments.map((c, i) => (
+              <div key={c.id} style={i > 0 ? { borderTop: "2px solid var(--cream-dark)" } : {}}>
+                <CommentItem comment={c} />
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Comment input */}
-      <div className="border-t border-gray-800 px-4 py-3 space-y-2 flex-shrink-0">
+      <div className="px-4 py-3 space-y-2 flex-shrink-0"
+        style={{ borderTop: "2px solid var(--cream-darker)" }}>
         {!isOwner && (
           <input
             className="input text-sm py-1.5"
@@ -201,7 +213,7 @@ export default function CommentsPanel({
         >
           {submitting ? "Posting…" : "Post comment"}
         </button>
-        <p className="text-xs text-gray-600 text-center">⌘↵ to post</p>
+        <p className="text-xs text-center" style={{ color: "var(--ink-muted)" }}>⌘↵ to post</p>
       </div>
     </div>
   );

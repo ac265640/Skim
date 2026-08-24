@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { generateSummary } from "@/lib/gemini";
 
 export async function GET(
   req: NextRequest,
@@ -32,12 +33,25 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  // Auto-retry summary if it previously failed but we have extracted text
+  let summary = document.summary;
+  if ((!summary || summary.startsWith("Summary generation failed")) && document.extractedText) {
+    generateSummary(document.extractedText)
+      .then((newSummary) => {
+        prisma.document.update({
+          where: { id: document.id },
+          data: { summary: newSummary },
+        }).catch(() => {});
+      })
+      .catch(() => {});
+  }
+
   return NextResponse.json({
     document: {
       id: document.id,
       filename: document.filename,
       storageUrl: document.storageUrl,
-      summary: document.summary,
+      summary: summary,
       extractedText: document.extractedText,
       createdAt: document.createdAt,
       ownerName: document.owner.name,

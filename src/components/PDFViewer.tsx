@@ -10,32 +10,35 @@ export default function PDFViewer({ url }: PDFViewerProps) {
   const [zoom, setZoom] = useState(100);
 
   return (
-    <div className="flex flex-col h-full bg-gray-950">
+    <div className="flex flex-col h-full" style={{ background: "var(--cream-dark)" }}>
       {/* PDF Controls Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-900/90 backdrop-blur border-b border-gray-800/80 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+        style={{ background: "var(--cream)", borderBottom: "2px solid var(--cream-darker)" }}>
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <button
             onClick={() => setZoom((z) => Math.max(50, z - 15))}
-            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+            className="btn-secondary py-1 px-2.5 text-xs font-bold"
             title="Zoom out"
           >
             −
           </button>
-          <span className="text-xs font-medium text-gray-300 min-w-[48px] text-center">
+          <span className="text-xs font-semibold min-w-[48px] text-center"
+            style={{ color: "var(--ink)" }}>
             {zoom}%
           </span>
           <button
             onClick={() => setZoom((z) => Math.min(200, z + 15))}
-            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+            className="btn-secondary py-1 px-2.5 text-xs font-bold"
             title="Zoom in"
           >
             +
           </button>
           <button
             onClick={() => setZoom(100)}
-            className="btn-secondary py-1 px-2 text-xs text-gray-400 hover:text-white ml-1"
+            className="btn-secondary py-1 px-2 text-xs ml-1"
             title="Reset zoom"
+            style={{ color: "var(--ink-muted)" }}
           >
             Reset
           </button>
@@ -72,12 +75,16 @@ export default function PDFViewer({ url }: PDFViewerProps) {
       </div>
 
       {/* PDF Viewport */}
-      <div className="flex-1 overflow-auto bg-gray-900/50 p-2 sm:p-4 flex items-center justify-center">
+      <div className="flex-1 overflow-auto p-2 sm:p-4 flex items-start justify-center"
+        style={{ background: "var(--cream-dark)" }}>
         <div
-          className="w-full h-full max-w-5xl transition-all duration-150 rounded-lg overflow-hidden border border-gray-800 shadow-2xl bg-white"
+          className="w-full h-full max-w-5xl transition-all duration-150 rounded-xl overflow-hidden shadow-lg"
           style={{
             transform: zoom !== 100 ? `scale(${zoom / 100})` : undefined,
             transformOrigin: "top center",
+            border: "2.5px solid var(--cream-darker)",
+            boxShadow: "6px 6px 0 var(--cream-darker)",
+            background: "#fff",
           }}
         >
           <iframe

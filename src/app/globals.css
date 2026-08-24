@@ -2,9 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  --brand: 139 92 246; /* violet-500 */
-  --brand-dark: 109 40 217; /* violet-700 */
+  --cream: #FDF4E7;
+  --cream-dark: #F5E6CC;
+  --cream-darker: #EDD5A9;
+  --orange: #E8823A;
+  --orange-dark: #C96A25;
+  --orange-light: #F4A261;
+  --ink: #1A1108;
+  --ink-light: #3D2B10;
+  --ink-muted: #7A5C38;
+  --card-bg: #1C1409;
+  --border: #2E1F0A;
 }
 
 @layer base {
@@ -12,85 +23,186 @@
     box-sizing: border-box;
   }
 
+  html {
+    background-color: var(--cream);
+  }
+
+  body {
+    background-color: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #111827;
+    background: var(--cream-dark);
   }
   ::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: var(--cream-darker);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #6d28d9;
+    background: var(--orange);
   }
 }
 
 @layer components {
+  /* Primary button — orange fill */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-medium rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-950;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 font-semibold rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none;
+    background-color: var(--orange);
+    color: #fff;
+    border: 2px solid var(--orange-dark);
+    box-shadow: 3px 3px 0px var(--orange-dark);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--orange-dark);
+    box-shadow: 1px 1px 0px var(--orange-dark);
+    transform: translate(2px, 2px);
+  }
+  .btn-primary:active:not(:disabled) {
+    box-shadow: none;
+    transform: translate(3px, 3px);
   }
 
+  /* Secondary button — dark fill */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-gray-100 font-medium rounded-lg border border-gray-700 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-gray-950;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 font-medium rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none;
+    background-color: var(--card-bg);
+    color: var(--cream);
+    border: 2px solid var(--border);
+    box-shadow: 2px 2px 0px var(--border);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    box-shadow: 1px 1px 0px var(--border);
+    transform: translate(1px, 1px);
+  }
+  .btn-secondary:active:not(:disabled) {
+    box-shadow: none;
+    transform: translate(2px, 2px);
   }
 
+  /* Danger button */
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-red-900/50 hover:bg-red-800 text-red-300 hover:text-red-100 text-sm font-medium rounded-lg border border-red-800/50 transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150;
+    background-color: #fff0ea;
+    color: #b53b1a;
+    border: 2px solid #f4b89a;
+    box-shadow: 2px 2px 0 #f4b89a;
+  }
+  .btn-danger:hover {
+    background-color: #fdddd2;
+    box-shadow: 1px 1px 0 #f4b89a;
+    transform: translate(1px, 1px);
   }
 
+  /* Input fields */
   .input {
-    @apply w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-150;
+    @apply w-full px-4 py-3 rounded-xl transition-all duration-150 focus:outline-none;
+    background-color: #fff;
+    color: var(--ink);
+    border: 2px solid var(--cream-darker);
+    font-family: 'Inter', sans-serif;
+  }
+  .input::placeholder {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+  .input:focus {
+    border-color: var(--orange);
+    box-shadow: 3px 3px 0px var(--orange-light);
   }
 
+  /* Card — dark with thick border */
   .card {
-    @apply bg-gray-900 border border-gray-800 rounded-xl p-6;
+    background-color: var(--card-bg);
+    border: 2.5px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 5px 5px 0px var(--border);
+    color: var(--cream);
   }
 
+  /* Card on cream background (light card) */
+  .card-light {
+    background-color: #fff;
+    border: 2.5px solid var(--cream-darker);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 5px 5px 0px var(--cream-darker);
+    color: var(--ink);
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .card-light:hover {
+    box-shadow: 3px 3px 0px var(--cream-darker);
+    transform: translate(2px, 2px);
+  }
+
+  /* Glass nav — light */
   .glass {
-    @apply bg-gray-900/80 backdrop-blur-sm border border-gray-800/60;
+    background-color: rgba(253, 244, 231, 0.92);
+    backdrop-filter: blur(12px);
+    border-color: var(--cream-darker);
   }
 
+  /* Label */
   .label {
-    @apply block text-sm font-medium text-gray-300 mb-1.5;
+    @apply block text-sm font-semibold mb-1.5;
+    color: var(--ink);
+  }
+  .card .label {
+    color: var(--cream-dark);
   }
 
+  /* Badge */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
 
   .badge-violet {
-    @apply badge bg-violet-900/60 text-violet-300 border border-violet-700/50;
+    @apply badge;
+    background-color: #FEF0E0;
+    color: var(--orange-dark);
+    border: 1.5px solid var(--orange-light);
   }
 
   .badge-green {
-    @apply badge bg-emerald-900/60 text-emerald-300 border border-emerald-700/50;
+    @apply badge;
+    background-color: #edfaf0;
+    color: #1a7a3a;
+    border: 1.5px solid #86efac;
   }
 
   .badge-yellow {
-    @apply badge bg-amber-900/60 text-amber-300 border border-amber-700/50;
+    @apply badge;
+    background-color: #fffbea;
+    color: #92400e;
+    border: 1.5px solid #fcd34d;
   }
 
   .section-title {
-    @apply text-xl font-semibold text-gray-100;
+    @apply text-xl font-bold;
+    color: var(--ink);
+    font-family: 'Instrument Serif', serif;
   }
 
   .text-muted {
-    @apply text-gray-400;
+    color: var(--ink-muted);
   }
 }
 
-/* Smooth gradient background for landing/auth pages */
+/* Landing/auth background */
 .gradient-bg {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(109, 40, 217, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    #030712;
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(ellipse at 15% 40%, rgba(232, 130, 58, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(244, 162, 97, 0.1) 0%, transparent 50%);
 }
 
-/* Shimmer loading animation */
+/* Shimmer loading */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -99,25 +211,25 @@
 .shimmer {
   background: linear-gradient(
     90deg,
-    #1f2937 25%,
-    #374151 50%,
-    #1f2937 75%
+    #f5e6cc 25%,
+    #edd5a9 50%,
+    #f5e6cc 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* Fade in animation */
+/* Fade in */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.35s ease-out forwards;
 }
 
-/* Pulse dot for "processing" state */
+/* Pulse dot */
 @keyframes pulseDot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
@@ -127,7 +239,7 @@
   animation: pulseDot 1.2s ease-in-out infinite;
 }
 
-/* Custom PDF viewer overrides */
+/* PDF overrides */
 .react-pdf__Page__canvas {
   max-width: 100% !important;
   height: auto !important;
@@ -137,3 +249,14 @@
   display: flex !important;
   justify-content: center;
 }
+
+/* Prevent browser autofill from forcing ice-blue background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+

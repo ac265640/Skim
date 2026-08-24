@@ -41,14 +41,16 @@ function LoginForm() {
   };
 
   return (
-    <div className="card">
+    <div className="card-light">
       {success && (
-        <div className="mb-4 p-3 bg-emerald-900/40 border border-emerald-700/50 rounded-lg text-emerald-300 text-sm">
+        <div className="mb-4 p-3 rounded-xl text-sm font-medium"
+          style={{ background: "#edfaf0", border: "2px solid #86efac", color: "#1a7a3a", boxShadow: "3px 3px 0 #86efac" }}>
           {success}
         </div>
       )}
       {error && (
-        <div className="mb-4 p-3 bg-red-900/40 border border-red-700/50 rounded-lg text-red-300 text-sm">
+        <div className="mb-4 p-3 rounded-xl text-sm font-medium"
+          style={{ background: "#fff0ea", border: "2px solid #f4b89a", color: "#b53b1a", boxShadow: "3px 3px 0 #f4b89a" }}>
           {error}
         </div>
       )}
@@ -90,18 +92,18 @@ function LoginForm() {
         >
           {loading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Signing in…
             </>
           ) : (
-            "Sign in"
+            "Sign in →"
           )}
         </button>
       </form>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
+      <p className="text-center text-sm mt-6" style={{ color: "var(--ink-muted)" }}>
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-violet-400 hover:text-violet-300 font-medium">
+        <Link href="/signup" className="font-semibold" style={{ color: "var(--orange)" }}>
           Sign up free
         </Link>
       </p>
@@ -115,19 +117,20 @@ export default function LoginPage() {
       <div className="w-full max-w-md fade-in">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
-            <div className="w-9 h-9 rounded-lg bg-violet-600 flex items-center justify-center group-hover:bg-violet-500 transition-colors">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+              style={{ background: "#1C1409", border: "2px solid #2E1F0A", boxShadow: "3px 3px 0 #2E1F0A" }}>
+              <svg className="w-5 h-5" style={{ color: "#E8823A" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">Skim</span>
+            <span className="text-2xl font-bold" style={{ fontFamily: "'Instrument Serif', serif", color: "var(--ink)" }}>Skim</span>
           </Link>
-          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="text-gray-400 mt-1">Sign in to your account</p>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: "'Instrument Serif', serif", color: "var(--ink)" }}>Welcome back</h1>
+          <p className="mt-1" style={{ color: "var(--ink-muted)" }}>Sign in to your account</p>
         </div>
 
-        <Suspense fallback={<div className="card h-64 shimmer" />}>
+        <Suspense fallback={<div className="shimmer rounded-2xl h-64" style={{ border: "2.5px solid var(--cream-darker)" }} />}>
           <LoginForm />
         </Suspense>
       </div>

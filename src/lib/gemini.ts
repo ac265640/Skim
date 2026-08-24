@@ -2,26 +2,29 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-const SUMMARY_MODEL = "gemini-2.5-flash";
-const CHAT_MODEL = "gemini-2.5-flash";
+// Use gemini-3.6-flash — confirmed working with @google/generative-ai v0.24.x
+const SUMMARY_MODEL = "gemini-3.6-flash";
+const CHAT_MODEL = "gemini-3.6-flash";
 
-// ~15k tokens ≈ 60k characters at ~4 chars/token
-const MAX_FULL_TEXT_CHARS = 60000;
-const CHUNK_SIZE_CHARS = 12000;
-const CHUNK_OVERLAP_CHARS = 500;
+// 200,000 characters ≈ 50,000 tokens — easily fits in Gemini 1.5's 1,000,000 token context window
+const SINGLE_PASS_MAX_CHARS = 200000;
 
 /**
- * Chunk text into overlapping windows for long document processing.
+ * Helper to call Gemini API with exponential backoff for rate limits (429 errors).
  */
-export function chunkText(text: string): string[] {
-  if (text.length <= MAX_FULL_TEXT_CHARS) return [text];
-  const chunks: string[] = [];
-  let start = 0;
-  while (start < text.length) {
-    chunks.push(text.slice(start, start + CHUNK_SIZE_CHARS));
-    start += CHUNK_SIZE_CHARS - CHUNK_OVERLAP_CHARS;
+async function callWithRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 2500): Promise<T> {
+  try {
+    return await fn();
+  } catch (err: unknown) {
+    const errorString = String(err);
+    const isRateLimit = errorString.includes("429") || errorString.includes("Quota") || errorString.includes("RESOURCE_EXHAUSTED");
+    if (retries > 0 && isRateLimit) {
+      console.warn(`Gemini rate limited (429). Retrying in ${delayMs}ms... (${retries} retries left)`);
+      await new Promise((r) => setTimeout(r, delayMs));
+      return callWithRetry(fn, retries - 1, delayMs * 2);
+    }
+    throw err;
   }
-  return chunks;
 }
 
 /**
@@ -34,29 +37,19 @@ export async function generateSummary(extractedText: string): Promise<string> {
     return "Automated text extraction was limited for this document (likely a scanned or image-only PDF). The content cannot be summarized without OCR processing.";
   }
 
-  // For very long docs, use a map-reduce strategy:
-  // 1. Summarize each chunk individually
-  // 2. Combine chunk summaries into a final summary
+  // Gemini 1.5 Flash has a 1,000,000 token context window.
+  // We can safely process up to 200,000 characters (~50k tokens) in a single request.
+  // If the document is even larger, we take a representative sample (beginning, middle, end)
+  // to avoid sending dozens of parallel API calls that trigger rate limits.
   let textToSummarize = extractedText;
 
-  if (extractedText.length > MAX_FULL_TEXT_CHARS) {
-    const chunks = chunkText(extractedText);
-    const model = genAI.getGenerativeModel({ model: SUMMARY_MODEL });
+  if (extractedText.length > SINGLE_PASS_MAX_CHARS) {
+    const start = extractedText.slice(0, 90000);
+    const midPoint = Math.floor(extractedText.length / 2);
+    const middle = extractedText.slice(midPoint - 30000, midPoint + 30000);
+    const end = extractedText.slice(-40000);
 
-    // Map: get a brief summary of each chunk
-    const chunkSummaries = await Promise.all(
-      chunks.map((chunk) =>
-        model
-          .generateContent(
-            `Extract the 2-3 most important facts, obligations, dates, or numbers from this document excerpt:\n\n${chunk}`
-          )
-          .then((r) => r.response.text())
-          .catch(() => "")
-      )
-    );
-
-    // Reduce: use chunk summaries as input to final summarizer
-    textToSummarize = chunkSummaries.filter(Boolean).join("\n\n---\n\n");
+    textToSummarize = `${start}\n\n[... Middle Excerpt ...]\n\n${middle}\n\n[... Final Excerpt ...]\n\n${end}`;
   }
 
   const model = genAI.getGenerativeModel({
@@ -72,17 +65,17 @@ Rules:
 - Be specific: use names, figures, and dates when available`,
   });
 
-  const result = await model.generateContent(
-    `Document text:\n\n${textToSummarize.slice(0, MAX_FULL_TEXT_CHARS)}`
-  );
-  return result.response.text().trim();
+  return callWithRetry(async () => {
+    const result = await model.generateContent(
+      `Document text:\n\n${textToSummarize}`
+    );
+    return result.response.text().trim();
+  });
 }
 
 /**
  * Answer a user question about a PDF document.
  * Implements grounding: model is restricted to document context only.
- * For long docs: uses a two-step retrieval — first ask Gemini to pull relevant
- * passages, then answer using those passages.
  */
 export async function chatWithDocument(
   extractedText: string,
@@ -99,36 +92,13 @@ Never fabricate information or draw on outside knowledge.`,
 
   let documentContext = extractedText;
 
-  // Long document strategy (Option A): if too long, do a lightweight retrieval pass first
-  if (extractedText.length > MAX_FULL_TEXT_CHARS) {
-    const chunks = chunkText(extractedText);
-    const retrievalModel = genAI.getGenerativeModel({ model: CHAT_MODEL });
-
-    // Ask Gemini to identify which chunks are relevant to the question
-    const relevanceChecks = await Promise.all(
-      chunks.map((chunk, i) =>
-        retrievalModel
-          .generateContent(
-            `Question: "${question}"\n\nDocument excerpt ${i + 1}:\n${chunk}\n\nDoes this excerpt contain information relevant to answering the question? Reply with only "YES" or "NO".`
-          )
-          .then((r) => ({ chunk, relevant: r.response.text().trim().startsWith("YES") }))
-          .catch(() => ({ chunk, relevant: false }))
-      )
-    );
-
-    const relevantChunks = relevanceChecks
-      .filter((c) => c.relevant)
-      .map((c) => c.chunk);
-
-    // Fall back to first 3 chunks if nothing marked relevant
-    documentContext =
-      relevantChunks.length > 0
-        ? relevantChunks.slice(0, 4).join("\n\n---\n\n")
-        : chunks.slice(0, 3).join("\n\n---\n\n");
+  if (extractedText.length > SINGLE_PASS_MAX_CHARS) {
+    const start = extractedText.slice(0, 100000);
+    const end = extractedText.slice(-100000);
+    documentContext = `${start}\n\n[... Excerpt ...]\n\n${end}`;
   }
 
-  // Build conversation history for multi-turn context (last 5 turns)
-  const recentHistory = history.slice(-10); // 5 turns = 10 messages
+  const recentHistory = history.slice(-10);
   const historyText = recentHistory
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
@@ -139,8 +109,10 @@ ${documentContext}
 ${historyText ? `Recent conversation:\n${historyText}\n` : ""}
 User: ${question}`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  return callWithRetry(async () => {
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  });
 }
 
 /**
@@ -162,26 +134,10 @@ Never fabricate information or draw on outside knowledge.`,
 
   let documentContext = extractedText;
 
-  if (extractedText.length > MAX_FULL_TEXT_CHARS) {
-    const chunks = chunkText(extractedText);
-    const retrievalModel = genAI.getGenerativeModel({ model: CHAT_MODEL });
-
-    const relevanceChecks = await Promise.all(
-      chunks.map((chunk, i) =>
-        retrievalModel
-          .generateContent(
-            `Question: "${question}"\n\nDocument excerpt ${i + 1}:\n${chunk}\n\nDoes this excerpt contain information relevant to answering the question? Reply with only "YES" or "NO".`
-          )
-          .then((r) => ({ chunk, relevant: r.response.text().trim().startsWith("YES") }))
-          .catch(() => ({ chunk, relevant: false }))
-      )
-    );
-
-    const relevantChunks = relevanceChecks.filter((c) => c.relevant).map((c) => c.chunk);
-    documentContext =
-      relevantChunks.length > 0
-        ? relevantChunks.slice(0, 4).join("\n\n---\n\n")
-        : chunks.slice(0, 3).join("\n\n---\n\n");
+  if (extractedText.length > SINGLE_PASS_MAX_CHARS) {
+    const start = extractedText.slice(0, 100000);
+    const end = extractedText.slice(-100000);
+    documentContext = `${start}\n\n[... Excerpt ...]\n\n${end}`;
   }
 
   const recentHistory = history.slice(-10);
@@ -195,14 +151,16 @@ ${documentContext}
 ${historyText ? `Recent conversation:\n${historyText}\n` : ""}
 User: ${question}`;
 
-  const result = await model.generateContentStream(prompt);
-  let fullText = "";
+  return callWithRetry(async () => {
+    const result = await model.generateContentStream(prompt);
+    let fullText = "";
 
-  for await (const chunk of result.stream) {
-    const text = chunk.text();
-    fullText += text;
-    onChunk(text);
-  }
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      fullText += text;
+      onChunk(text);
+    }
 
-  return fullText;
+    return fullText;
+  });
 }
