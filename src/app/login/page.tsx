@@ -17,6 +17,16 @@ function LoginForm() {
     if (searchParams.get("signup") === "1") {
       setSuccess("Account created! Sign in to get started.");
     }
+    const errParam = searchParams.get("error");
+    if (errParam) {
+      if (errParam === "CredentialsSignin") {
+        setError("Invalid email or password");
+      } else if (errParam === "Configuration") {
+        setError("Invalid email or password");
+      } else {
+        setError("Authentication failed. Please try again.");
+      }
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
