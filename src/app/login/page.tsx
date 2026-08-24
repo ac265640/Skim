@@ -14,14 +14,16 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get("signup") === "1") {
+    const signupParam = searchParams.get("signup");
+    const errParam = searchParams.get("error");
+
+    if (signupParam === "1" && !errParam) {
       setSuccess("Account created! Sign in to get started.");
     }
-    const errParam = searchParams.get("error");
+
     if (errParam) {
-      if (errParam === "CredentialsSignin") {
-        setError("Invalid email or password");
-      } else if (errParam === "Configuration") {
+      setSuccess("");
+      if (errParam === "CredentialsSignin" || errParam === "Configuration") {
         setError("Invalid email or password");
       } else {
         setError("Authentication failed. Please try again.");
@@ -32,6 +34,7 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     const result = await signIn("credentials", {
