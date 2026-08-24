@@ -46,7 +46,11 @@ function LoginForm() {
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error === "CredentialsSignin" ? "Invalid email or password" : result.error);
+      if (result.error === "CredentialsSignin" || result.error === "Configuration") {
+        setError("Invalid email or password");
+      } else {
+        setError("Authentication failed. Please try again.");
+      }
     } else {
       router.push("/dashboard");
       router.refresh();
