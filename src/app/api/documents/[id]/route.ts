@@ -34,7 +34,7 @@ export async function GET(
   }
 
   // Auto-retry summary if it previously failed but we have extracted text
-  let summary = document.summary;
+  const summary = document.summary;
   if ((!summary || summary.startsWith("Summary generation failed")) && document.extractedText) {
     generateSummary(document.extractedText)
       .then((newSummary) => {
