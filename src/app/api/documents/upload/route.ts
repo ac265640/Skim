@@ -5,13 +5,11 @@ import { supabaseAdmin, BUCKET_NAME } from "@/lib/supabase";
 import { prisma } from "@/lib/prisma";
 import { generateSummary } from "@/lib/gemini";
 
-// pdf-parse requires dynamic import for serverless compatibility
+// pdf-parse text extraction
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const pdfParseModule = await import("pdf-parse");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parse = (pdfParseModule as any).default || pdfParseModule;
-  const data = await parse(buffer);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdf = require("pdf-parse");
+  const data = await pdf(buffer);
   return data?.text || "";
 }
 

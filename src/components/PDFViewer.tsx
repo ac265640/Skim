@@ -1,99 +1,92 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+import { useState } from "react";
 
 interface PDFViewerProps {
   url: string;
 }
 
 export default function PDFViewer({ url }: PDFViewerProps) {
-  const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.0);
-  const [containerWidth, setContainerWidth] = useState(600);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.clientWidth - 32);
-      }
-    };
-    updateWidth();
-    const observer = new ResizeObserver(updateWidth);
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const [zoom, setZoom] = useState(100);
 
   return (
     <div className="flex flex-col h-full bg-gray-950">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-gray-900 border-b border-gray-800 flex-shrink-0">
-        <button
-          onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-          disabled={pageNumber <= 1}
-          className="btn-secondary py-1 px-2 text-xs disabled:opacity-40"
-        >
-          ‹ Prev
-        </button>
-        <span className="text-sm text-gray-400 min-w-[80px] text-center">
-          {pageNumber} / {numPages || "—"}
-        </span>
-        <button
-          onClick={() => setPageNumber((p) => Math.min(numPages, p + 1))}
-          disabled={pageNumber >= numPages}
-          className="btn-secondary py-1 px-2 text-xs disabled:opacity-40"
-        >
-          Next ›
-        </button>
-        <div className="w-px h-4 bg-gray-700 mx-1" />
-        <button
-          onClick={() => setScale((s) => Math.max(0.5, s - 0.25))}
-          className="btn-secondary py-1 px-2 text-xs"
-        >
-          −
-        </button>
-        <span className="text-xs text-gray-400 min-w-[40px] text-center">
-          {Math.round(scale * 100)}%
-        </span>
-        <button
-          onClick={() => setScale((s) => Math.min(3, s + 0.25))}
-          className="btn-secondary py-1 px-2 text-xs"
-        >
-          +
-        </button>
+      {/* PDF Controls Toolbar */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-900/90 backdrop-blur border-b border-gray-800/80 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          {/* Zoom controls */}
+          <button
+            onClick={() => setZoom((z) => Math.max(50, z - 15))}
+            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+            title="Zoom out"
+          >
+            −
+          </button>
+          <span className="text-xs font-medium text-gray-300 min-w-[48px] text-center">
+            {zoom}%
+          </span>
+          <button
+            onClick={() => setZoom((z) => Math.min(200, z + 15))}
+            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+            title="Zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setZoom(100)}
+            className="btn-secondary py-1 px-2 text-xs text-gray-400 hover:text-white ml-1"
+            title="Reset zoom"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Open in new tab */}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary py-1 px-2.5 text-xs inline-flex items-center gap-1"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span className="hidden sm:inline">Open in tab</span>
+          </a>
+
+          {/* Download */}
+          <a
+            href={url}
+            download
+            className="btn-secondary py-1 px-2.5 text-xs inline-flex items-center gap-1"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span className="hidden sm:inline">Download</span>
+          </a>
+        </div>
       </div>
 
-      {/* PDF area */}
-      <div ref={containerRef} className="flex-1 overflow-auto p-4 flex justify-center">
-        <Document
-          file={url}
-          onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-          loading={
-            <div className="flex flex-col items-center justify-center h-64 gap-3">
-              <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-              <p className="text-gray-400 text-sm">Loading PDF…</p>
-            </div>
-          }
-          error={
-            <div className="text-center p-8 text-red-400">
-              <p className="font-medium">Failed to load PDF</p>
-              <p className="text-sm text-red-400/70 mt-1">The file may be unavailable or corrupted.</p>
-            </div>
-          }
+      {/* PDF Viewport */}
+      <div className="flex-1 overflow-auto bg-gray-900/50 p-2 sm:p-4 flex items-center justify-center">
+        <div
+          className="w-full h-full max-w-5xl transition-all duration-150 rounded-lg overflow-hidden border border-gray-800 shadow-2xl bg-white"
+          style={{
+            transform: zoom !== 100 ? `scale(${zoom / 100})` : undefined,
+            transformOrigin: "top center",
+          }}
         >
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            width={Math.min(containerWidth, 900)}
-            className="shadow-2xl shadow-black/50 rounded"
+          <iframe
+            src={`${url}#toolbar=1&navpanes=1`}
+            title="PDF Document"
+            className="w-full h-full border-0 min-h-[600px]"
+            allow="fullscreen"
           />
-        </Document>
+        </div>
       </div>
     </div>
   );
