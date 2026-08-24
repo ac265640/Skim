@@ -2,8 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-const SUMMARY_MODEL = "gemini-1.5-flash";
-const CHAT_MODEL = "gemini-1.5-flash";
+const SUMMARY_MODEL = "gemini-2.5-flash";
+const CHAT_MODEL = "gemini-2.5-flash";
 
 // ~15k tokens ≈ 60k characters at ~4 chars/token
 const MAX_FULL_TEXT_CHARS = 60000;
