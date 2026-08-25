@@ -10,7 +10,7 @@
 [![Gemini](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-4285F4?style=flat&logo=google)](https://deepmind.google/technologies/gemini)
 
 **Live URL**: [https://skim-five.vercel.app](https://skim-five.vercel.app)
-
+**Video Walkthrough**: [https://www.loom.com/share/5a9d9d625c2545c0a138bf03590eb444](https://www.loom.com/share/5a9d9d625c2545c0a138bf03590eb444)
 ---
 
 ## Table of Contents
