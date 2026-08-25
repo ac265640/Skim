@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -42,6 +42,39 @@ export default function DocumentPage() {
   const [copied, setCopied] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [mobileTab, setMobileTab] = useState<"pdf" | "sidebar">("pdf");
+  const [sidebarWidth, setSidebarWidth] = useState(384); // default lg:w-96
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartWidth = useRef(384);
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = sidebarWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const delta = dragStartX.current - e.clientX;
+      const newWidth = Math.min(700, Math.max(280, dragStartWidth.current + delta));
+      setSidebarWidth(newWidth);
+    };
+    const onMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
 
   const id = params.id as string;
 
@@ -248,10 +281,20 @@ export default function DocumentPage() {
           <PDFViewer url={document.storageUrl} />
         </div>
 
+        {/* Drag handle — desktop only */}
+        <div
+          className="hidden sm:flex items-center justify-center flex-shrink-0 cursor-col-resize group"
+          style={{ width: 8, background: "var(--cream-darker)", transition: "background 0.15s" }}
+          onMouseDown={onDragStart}
+        >
+          <div className="w-0.5 h-8 rounded-full opacity-50 group-hover:opacity-100 transition-opacity"
+            style={{ background: "var(--orange)" }} />
+        </div>
+
         {/* Right sidebar */}
-        <div className={`w-full sm:w-80 lg:w-96 flex flex-col flex-shrink-0
-          ${mobileTab === "pdf" ? "hidden sm:flex" : "flex"}`}
-          style={{ borderLeft: "2px solid var(--cream-darker)", background: "#fff" }}>
+        <div
+          className={`w-full flex flex-col flex-shrink-0 ${mobileTab === "pdf" ? "hidden sm:flex" : "flex"}`}
+          style={{ width: typeof window !== "undefined" && window.innerWidth >= 640 ? sidebarWidth : undefined, background: "#fff", borderLeft: "2px solid var(--cream-darker)" }}>
           {/* Tabs */}
           <div className="flex flex-shrink-0" style={{ borderBottom: "2px solid var(--cream-darker)" }}>
             {(["chat", "comments"] as SidebarTab[]).map((tab) => (
