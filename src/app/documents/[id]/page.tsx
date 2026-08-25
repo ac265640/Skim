@@ -51,8 +51,8 @@ export default function DocumentPage() {
     isDragging.current = true;
     dragStartX.current = e.clientX;
     dragStartWidth.current = sidebarWidth;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
+    window.document.body.style.cursor = "col-resize";
+    window.document.body.style.userSelect = "none";
   }, [sidebarWidth]);
 
   useEffect(() => {
@@ -65,8 +65,8 @@ export default function DocumentPage() {
     const onMouseUp = () => {
       if (!isDragging.current) return;
       isDragging.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+      window.document.body.style.cursor = "";
+      window.document.body.style.userSelect = "";
     };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -294,7 +294,7 @@ export default function DocumentPage() {
         {/* Right sidebar */}
         <div
           className={`w-full flex flex-col flex-shrink-0 ${mobileTab === "pdf" ? "hidden sm:flex" : "flex"}`}
-          style={{ width: typeof window !== "undefined" && window.innerWidth >= 640 ? sidebarWidth : undefined, background: "#fff", borderLeft: "2px solid var(--cream-darker)" }}>
+          style={{ width: sidebarWidth, background: "#fff", borderLeft: "2px solid var(--cream-darker)" }}>
           {/* Tabs */}
           <div className="flex flex-shrink-0" style={{ borderBottom: "2px solid var(--cream-darker)" }}>
             {(["chat", "comments"] as SidebarTab[]).map((tab) => (
