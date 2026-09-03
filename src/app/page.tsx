@@ -1,3 +1,5 @@
+{/* Landing page (static, no auth required) */}
+
 import Link from "next/link";
 
 export default function HomePage() {

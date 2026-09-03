@@ -1,3 +1,5 @@
+// GET, POST	purpose --> NextAuth handler
+
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/auth";
 

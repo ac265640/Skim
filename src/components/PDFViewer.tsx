@@ -1,3 +1,5 @@
+// iframe-based PDF renderer + zoom controls + download + Open in new tab
+
 "use client";
 
 import { useState } from "react";

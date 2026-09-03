@@ -1,3 +1,5 @@
+// GET	Resolve share token → document
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 

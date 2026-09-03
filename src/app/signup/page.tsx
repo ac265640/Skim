@@ -1,3 +1,5 @@
+// Signup form → calls /api/auth/signup
+
 "use client";
 
 import { useState } from "react";

@@ -1,3 +1,5 @@
+// POST, GET, DELETE	---> Create/list/revoke share links
+
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -21,13 +23,14 @@ export async function POST(req: NextRequest) {
   if (!doc) {
     return NextResponse.json({ error: "Document not found" }, { status: 404 });
   }
-
+// here it creates a prisma share link entry with a unique token and returns the share link and its URL
   const token = uuidv4();
   const shareLink = await prisma.shareLink.create({
     data: { documentId, token },
   });
 
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  //return base url + /shared/ + token
   const url = `${baseUrl}/shared/${token}`;
 
   return NextResponse.json({ shareLink, url });

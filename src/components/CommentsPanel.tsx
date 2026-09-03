@@ -1,3 +1,5 @@
+// Comments list + reply tree + guest name input + polling
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";

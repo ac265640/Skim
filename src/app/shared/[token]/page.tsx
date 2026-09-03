@@ -1,3 +1,5 @@
+// Shared/guest PDF viewer (no auth needed)
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";

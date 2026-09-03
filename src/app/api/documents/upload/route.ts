@@ -1,3 +1,6 @@
+// POST	 , Upload PDF + extract + summarize
+
+
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -96,7 +99,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Get the public/signed URL
+  // Get the public/signed URL.......direct link anyone with permission can use to view/download that file
   const { data: urlData } = supabaseAdmin.storage
     .from(BUCKET_NAME)
     .getPublicUrl(storagePath);
